@@ -15,7 +15,11 @@ let encryption = process.argv[3] || 'none';
 let compression = process.argv[4] || 'none';
 
 const httpServer = http.createServer(requestHandler);
-httpServer.listen(port, () => {console.log('server is listening on port '+ port)});
+httpServer.listen(port, () => {
+    console.log('server is listening on port', port)
+    console.log('encryption scheme being used:', encryption)
+    console.log('compression being used:', compression)
+});
 
 function requestHandler(req, res) {
     if (req.url === '/') {
