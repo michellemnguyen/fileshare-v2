@@ -26,7 +26,7 @@ function requestHandler(req, res) {
         sendIndexHtml(res);
     } else if (req.url === '/list') {
         sendListOfUploadedFiles(res);
-    } else if ( /\/download\/[^\/]+$/.test(req.url)) {
+    } else if ( /\/files\/[^\/]+$/.test(req.url)) {
         sendUploadedFile(req.url, res);
     } else if ( /\/upload\/[^\/]+$/.test(req.url) ) {
         saveUploadedFile(req, res)
