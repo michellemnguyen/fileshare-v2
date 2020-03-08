@@ -1,12 +1,8 @@
 const http = require('http');
 const fs = require('fs');
 const path = require('path');
-<<<<<<< Updated upstream
-var aesjs = require('aes-js');
-=======
 const crypto = require('crypto');
 
->>>>>>> Stashed changes
 
 let port = process.argv[2] || 3000;
 
