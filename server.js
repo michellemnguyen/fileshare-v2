@@ -115,6 +115,35 @@ function sendInvalidRequest(res){
 
 /* ENCRYPTION */
 
+function downloadDecrypt(url, res){
+    let file = path.join(__dirname, url);
+    fs.readFile(file, (err, content) => {
+      if (err) {
+        res.writeHead(404, {'Content-Type': 'text'});
+        res.write('File Not Found!');
+        res.end();
+      } else {
+        res.writeHead(200, {'Content-Type': 'application/octet-stream'});
+        res.write(content);
+        res.end();
+      }
+    })
+  }
+  
+
+  function uploadEncrypt(req, res){
+    console.log('saving uploaded file');
+    let fileName = path.basename(req.url);
+    let file = path.join(__dirname, 'files', fileName)
+    req.pipe(fs.createWriteStream(file));
+    req.on('end', () => {
+      res.writeHead(200, {'Content-Type': 'text'});
+      res.write('uploaded succesfully');
+      res.end();
+    })
+  }
+  
+
 // Nodejs encryption with CTR
 let algorithm = 'aes-256-cbc';
 const key = crypto.randomBytes(32);
