@@ -1,6 +1,8 @@
 const http = require('http');
 const fs = require('fs');
 const path = require('path');
+const zlib = require("zlib");
+const decompress = zlib.createGunzip();
 
 let port = process.argv[2] || 3000;
 
@@ -68,7 +70,16 @@ function sendListOfUploadedFiles(res){
 
 
 function sendUploadedFile(url, res){
+
+  if(/.gz$/i.test(url)==true){
+    newfileName = fileName.replace(".gz","");
+    let file = path.join(__dirname, 'files', newfileName)
+    url.pipe(zlib.createGunzip()).pipe(fs.createWriteStream(file));
+  }
   let file = path.join(__dirname, url);
+
+
+  
   fs.readFile(file, (err, content) => {
     if(err){
       res.writeHead(404, {'Content-Type': 'text'});
@@ -85,9 +96,18 @@ function sendUploadedFile(url, res){
 
 function saveUploadedFile(req, res){
   console.log('saving uploaded file');
+  console.log('request was made:' + req.url);
   let fileName = path.basename(req.url);
-  let file = path.join(__dirname, 'files', fileName)
-  req.pipe(fs.createWriteStream(file));
+  if (compression === 'compress'){
+    newfileName = fileName + ".gz";
+    let file = path.join(__dirname, 'files', newfileName)
+    req.pipe(zlib.createGzip()).pipe(fs.createWriteStream(file));
+  }
+  else {
+    let file = path.join(__dirname, 'files', fileName)
+    req.pipe(fs.createWriteStream(file));
+  }
+  
   req.on('end', () => {
     res.writeHead(200, {'Content-Type': 'text'});
     res.write('uploaded succesfully');
