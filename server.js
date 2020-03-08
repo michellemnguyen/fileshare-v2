@@ -1,7 +1,12 @@
 const http = require('http');
 const fs = require('fs');
 const path = require('path');
+<<<<<<< Updated upstream
 var aesjs = require('aes-js');
+=======
+const crypto = require('crypto');
+
+>>>>>>> Stashed changes
 
 let port = process.argv[2] || 3000;
 
@@ -35,6 +40,8 @@ function requestHandler(req, res) {
         sendInvalidRequest(res);
     }
 }
+
+/* FILE UPLOAD & DOWNLOAD */
 
 function sendIndexHtml(res) {
     let indexFile = path.join(__dirname, 'index.html');
@@ -71,11 +78,11 @@ function sendListOfUploadedFiles(res){
 function sendUploadedFile(url, res){
   let file = path.join(__dirname, url);
   fs.readFile(file, (err, content) => {
-    if(err){
+    if (err) {
       res.writeHead(404, {'Content-Type': 'text'});
       res.write('File Not Found!');
       res.end();
-    }else{
+    } else {
       res.writeHead(200, {'Content-Type': 'application/octet-stream'});
       res.write(content);
       res.end();
@@ -101,3 +108,30 @@ function sendInvalidRequest(res){
   res.write('Invalid Request');
   res.end(); 
 }
+
+/* ENCRYPTION */
+
+// Nodejs encryption with CTR
+let algorithm = 'aes-256-cbc';
+const key = crypto.randomBytes(32);
+const iv = crypto.randomBytes(16);
+
+function encrypt(text, algorithm) {
+    let cipher = crypto.createCipheriv(algorithm, Buffer.from(key), iv);
+    let encrypted = cipher.update(text);
+    encrypted = Buffer.concat([encrypted, cipher.final()]);
+    return { 
+        iv: iv.toString('hex'), 
+        encryptedData: encrypted.toString('hex') 
+    };
+}
+   
+function decrypt(text, algorithm) {
+    let iv = Buffer.from(text.iv, 'hex');
+    let encryptedText = Buffer.from(text.encryptedData, 'hex');
+    let decipher = crypto.createDecipheriv(algorithm, Buffer.from(key), iv);
+    let decrypted = decipher.update(encryptedText);
+    decrypted = Buffer.concat([decrypted, decipher.final()]);
+    return decrypted.toString();
+}
+   
