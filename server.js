@@ -27,9 +27,9 @@ function requestHandler(req, res) {
     } else if (req.url === '/list') {
         sendListOfUploadedFiles(res);
     } else if ( /\/files\/[^\/]+$/.test(req.url)) {
-        sendUploadedFile(req.url, res);
+        download(req.url, res);
     } else if ( /\/upload\/[^\/]+$/.test(req.url) ) {
-        saveUploadedFile(req, res)
+        upload(req, res)
     } else {
         sendInvalidRequest(res);
     }
@@ -67,7 +67,7 @@ function sendListOfUploadedFiles(res){
 }
 
 
-function sendUploadedFile(url, res){
+function download(url, res){
   let file = path.join(__dirname, url);
   fs.readFile(file, (err, content) => {
     if(err){
@@ -83,7 +83,7 @@ function sendUploadedFile(url, res){
 }
 
 
-function saveUploadedFile(req, res){
+function upload(req, res){
   console.log('saving uploaded file');
   let fileName = path.basename(req.url);
   let file = path.join(__dirname, 'files', fileName)
