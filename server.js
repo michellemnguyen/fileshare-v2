@@ -29,9 +29,17 @@ function requestHandler(req, res) {
     } else if (req.url === '/list') {
         sendListOfUploadedFiles(res);
     } else if ( /\/files\/[^\/]+$/.test(req.url)) {
-        download(req.url, res);
+        if (encryption === 'none') {
+            download(req.url, res);
+        } else {
+            downloadDecrypt(req.url, res);
+        }
     } else if ( /\/upload\/[^\/]+$/.test(req.url) ) {
-        upload(req, res)
+        if (encryption === 'none') {
+            upload(req, res);
+        } else {
+            uploadEncrypt(req.url, res);
+        }
     } else {
         sendInvalidRequest(res);
     }
