@@ -30,15 +30,15 @@ function requestHandler(req, res) {
         sendListOfUploadedFiles(res);
     } else if ( /\/files\/[^\/]+$/.test(req.url)) {
         if (encryption === 'none') {
-            download(req.url, res);
+            download(req, res);
         } else {
-            downloadDecrypt(req.url, res);
+            downloadDecrypt(req, res);
         }
     } else if ( /\/upload\/[^\/]+$/.test(req.url) ) {
         if (encryption === 'none') {
             upload(req, res);
         } else {
-            uploadEncrypt(req.url, res);
+            uploadEncrypt(req, res);
         }
     } else {
         sendInvalidRequest(res);
