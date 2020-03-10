@@ -149,3 +149,13 @@ let algorithm = 'aes-256-cbc';
 const key = crypto.randomBytes(32);
 const iv = crypto.randomBytes(16);
 
+function encrypt(data) {
+    try {
+        var cipher = Crypto.createCipher('aes-256-cbc', this.password);
+        var encrypted = Buffer.concat([cipher.update(new Buffer(JSON.stringify(data), "utf8")), cipher.final()]);
+        FileSystem.writeFileSync(this.filePath, encrypted);
+        return { message: "Encrypted!" };
+    } catch (exception) {
+        throw new Error(exception.message);
+    }
+}
