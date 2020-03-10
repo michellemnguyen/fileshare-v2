@@ -113,10 +113,14 @@ function sendInvalidRequest(res){
   res.end(); 
 }
 
-/* ENCRYPTION */
+/* ENCRYPTION/DECRYPTION */
 
-function downloadDecrypt(url, res){
-    let file = path.join(__dirname, url);
+// Nodejs encryption with CTR
+let algorithm = 'aes-256-cbc';
+let password = 'd6F3Efeq';
+
+function downloadDecrypt(req, res) {
+    let file = path.join(__dirname, req.url);
     fs.readFile(file, (err, content) => {
       if (err) {
         res.writeHead(404, {'Content-Type': 'text'});
@@ -124,38 +128,34 @@ function downloadDecrypt(url, res){
         res.end();
       } else {
         res.writeHead(200, {'Content-Type': 'application/octet-stream'});
-        res.write(content);
+        res.write(decrypt(content));
         res.end();
       }
     })
-  }
-  
+}
+
+function decrypt(buffer){
+    var decipher = crypto.createDecipher(algorithm,password)
+    var dec = Buffer.concat([decipher.update(buffer) , decipher.final()]);
+    return dec;
+}  
 
   function uploadEncrypt(req, res){
     console.log('saving encrypted uploaded file');
+
     let fileName = path.basename(req.url);
-    let file = path.join(__dirname, 'encrypted', fileName)
-    req.pipe(fs.createWriteStream(file));
+    let filePath = path.join(__dirname, 'files', fileName);
+
+    // encrypt content
+    var encrypt = crypto.createCipher(algorithm, password);
+    // create output file
+    var output = fs.createWriteStream(filePath);
+
+    req.pipe(encrypt).pipe(output);
     req.on('end', () => {
       res.writeHead(200, {'Content-Type': 'text'});
       res.write('uploaded succesfully');
       res.end();
     })
-}
   
-
-// Nodejs encryption with CTR
-let algorithm = 'aes-256-cbc';
-const key = crypto.randomBytes(32);
-const iv = crypto.randomBytes(16);
-
-function encrypt(data) {
-    try {
-        var cipher = Crypto.createCipher('aes-256-cbc', this.password);
-        var encrypted = Buffer.concat([cipher.update(new Buffer(JSON.stringify(data), "utf8")), cipher.final()]);
-        FileSystem.writeFileSync(this.filePath, encrypted);
-        return { message: "Encrypted!" };
-    } catch (exception) {
-        throw new Error(exception.message);
-    }
 }
