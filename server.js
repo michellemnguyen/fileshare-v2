@@ -134,7 +134,7 @@ function downloadDecrypt(url, res){
   function uploadEncrypt(req, res){
     console.log('saving encrypted uploaded file');
     let fileName = path.basename(req.url);
-    let file = path.join(__dirname, 'files', fileName)
+    let file = path.join(__dirname, 'encrypted', fileName)
     req.pipe(fs.createWriteStream(file));
     req.on('end', () => {
       res.writeHead(200, {'Content-Type': 'text'});
