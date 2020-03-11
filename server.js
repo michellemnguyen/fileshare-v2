@@ -114,6 +114,7 @@ function sendInvalidRequest(res){
 }
 
 /* ENCRYPTION/DECRYPTION */
+// using: https://gist.github.com/chris-rock/335f92742b497256982a
 
 // Nodejs encryption with CTR
 let algorithm = 'aes-256-cbc';
