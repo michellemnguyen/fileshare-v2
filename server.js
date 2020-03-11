@@ -120,7 +120,11 @@ function upload(req, res){
 
 function sendInvalidRequest(res){
   res.writeHead(400, {'Content-Type': 'application/json'});
-  res.write('Invalid Request');
+  if (encryption !== 'none' && compression !== 'none') {
+    res.write('Combining encrpytion and compression not allowed!')
+  } else {
+    res.write('Invalid Request');
+  }
   res.end(); 
 }
 
