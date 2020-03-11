@@ -4,7 +4,10 @@
   "description": "Node.JS simple server to upload and download files",
   "main": "server.js",
   "dependencies": {
-    "crypto": "^1.0.1"
+    "crypto": "^1.0.1",
+    "stream-to": "^2.0.0",
+    "stream-to-array": "^2.3.0",
+    "zlib": "^1.0.5"
   },
   "devDependencies": {},
   "scripts": {
