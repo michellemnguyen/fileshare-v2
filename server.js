@@ -2,7 +2,8 @@ const http = require('http');
 const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
-
+var zlib = require('zlib');
+var toArray = require('stream-to-array');
 
 let port = process.argv[2] || 3000;
 
@@ -29,16 +30,26 @@ function requestHandler(req, res) {
     } else if (req.url === '/list') {
         sendListOfUploadedFiles(res);
     } else if ( /\/files\/[^\/]+$/.test(req.url)) {
-        if (encryption === 'none') {
+        if (encryption === 'none' && compression === 'none') {
             download(req, res);
-        } else {
+        } else if (encryption === 'aes' && compression === 'none') {
             downloadDecrypt(req, res);
+        } else if (encryption === 'none' && compression === 'compress') {
+            downloadCompress(req, res);
+        } else {
+          console.log('Combining methods not allowed!');
+          sendInvalidRequest(res);
         }
     } else if ( /\/upload\/[^\/]+$/.test(req.url) ) {
-        if (encryption === 'none') {
+        if (encryption === 'none' && compression === 'none') {
             upload(req, res);
-        } else {
+        } else if (encryption === 'aes' && compression === 'none') {
             uploadEncrypt(req, res);
+        } else if (encryption === 'none' && compression === 'compress') {
+            uploadCompress(req, res);
+        } else {
+          console.log('Combining methods not allowed!');
+          sendInvalidRequest(res);
         }
     } else {
         sendInvalidRequest(res);
@@ -121,18 +132,18 @@ let algorithm = 'aes-256-cbc';
 let password = 'd6F3Efeq';
 
 function downloadDecrypt(req, res) {
-    let file = path.join(__dirname, req.url);
-    fs.readFile(file, (err, content) => {
-      if (err) {
-        res.writeHead(404, {'Content-Type': 'text'});
-        res.write('File Not Found!');
-        res.end();
-      } else {
-        res.writeHead(200, {'Content-Type': 'application/octet-stream'});
-        res.write(decrypt(content));
-        res.end();
-      }
-    })
+  let file = path.join(__dirname, req.url);
+  fs.readFile(file, (err, content) => {
+    if (err) {
+      res.writeHead(404, {'Content-Type': 'text'});
+      res.write('File Not Found!');
+      res.end();
+    } else {
+      res.writeHead(200, {'Content-Type': 'application/octet-stream'});
+      res.write(decrypt(content));
+      res.end();
+    }
+  })
 }
 
 function decrypt(buffer){
@@ -141,22 +152,59 @@ function decrypt(buffer){
     return dec;
 }  
 
-  function uploadEncrypt(req, res){
-    console.log('saving encrypted uploaded file');
+function uploadEncrypt(req, res){
+  console.log('saving encrypted uploaded file');
 
-    let fileName = path.basename(req.url);
-    let filePath = path.join(__dirname, 'files', fileName);
+  let fileName = path.basename(req.url);
+  let filePath = path.join(__dirname, 'files', fileName);
 
-    // encrypt content
-    var encrypt = crypto.createCipher(algorithm, password);
-    // create output file
-    var output = fs.createWriteStream(filePath);
+  // encrypt content
+  var encrypt = crypto.createCipher(algorithm, password);
+  // create output file
+  var output = fs.createWriteStream(filePath);
 
-    req.pipe(encrypt).pipe(output);
-    req.on('end', () => {
-      res.writeHead(200, {'Content-Type': 'text'});
-      res.write('uploaded succesfully');
+  req.pipe(encrypt).pipe(output);
+  req.on('end', () => {
+    res.writeHead(200, {'Content-Type': 'text'});
+    res.write('uploaded succesfully');
+    res.end();
+  })
+}
+
+/* COMPRESSION/DECOMPRESSION */
+// reference: https://nodejs.org/api/zlib.html#zlib_class_options
+
+function downloadCompress(req, res) {
+  let file = path.join(__dirname, req.url);
+  fs.readFile(file, (err, content) => {
+    if (err) {
+      res.writeHead(404, {'Content-Type': 'text'});
+      res.write('File Not Found!');
       res.end();
-    })
-  
+    } else {      
+      res.writeHead(200, {'Content-Type': 'application/octet-stream'});
+      res.write(zlib.unzipSync(content));
+      res.end(); 
+    }
+  })
+}
+
+function uploadCompress(req, res) {
+  console.log('saving compressed uploaded file');
+
+  let fileName = path.basename(req.url);
+  let filePath = path.join(__dirname, 'files', fileName);
+
+  // zip content
+  var zip = zlib.createGzip();
+  // create output file
+  var output = fs.createWriteStream(filePath);
+
+  req.pipe(zip).pipe(output);
+  req.on('end', () => {
+    res.writeHead(200, {'Content-Type': 'text'});
+    res.write('uploaded succesfully');
+    res.end();
+  })
+
 }
