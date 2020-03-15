@@ -1,41 +1,33 @@
 # fileshare-v2
 Node.JS simple server to upload and download files
 
-### Pre-requisites
-**Nothing** No NPM Module dependency, as it is written using pure Node.JS API. Only nodejs should be installed.
-
-### Start server with default port 3000, default no encryption, default no compression
+## Pre-requisites
+Install node.js. In addition, navigate to the root to install package dependencies:
 ```
-node server.js
+npm install
 ```
 
-### Start server with specific port 4200, RSA encrpytion, compression
+## Running the project
+
+The format of the command to start the server is here:
 ```
-node server.js 4200 rsa compress
+node server.js [port #] [aes|none] [compress|none]
 ```
 
-
-### Start server with specific port 4200, AES encrpyption, compression
+### Start server with port 3000, default no encryption, default no compression
 ```
-node server.js 4200 aes compress
-```
-
-### Start server with specific port 4200, no encrpyption, compression
-```
-node server.js 4200 none compress
+node server.js 3000 none none
 ```
 
-
-### Start server with specific port 4200, AES encrpytion, default no compression
+### Start server with port 3000, AES encrpyption, no compression
 ```
-node server.js 4200 aes
-```
-
-### Start server with specific port 4200, AES encrpytion, no compression
-```
-node server.js 4200 aes none
+node server.js 3000 aes none
 ```
 
+### Start server with port 3000, no encrpyption, compression
+```
+node server.js 3000 none compress
+```
 
 
 ### Open in browser, show download/upload UI
