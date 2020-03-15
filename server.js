@@ -8,7 +8,7 @@ var zlib = require('zlib');
 let port = process.argv[2] || 3000;
 
 // encryption scheme being used
-// options: 'none', 'aes', 'rsa'
+// options: 'none', 'aes'
 // default: 'none'
 let encryption = process.argv[3] || 'none';
 
@@ -32,7 +32,7 @@ function requestHandler(req, res) {
     } else if ( /\/files\/[^\/]+$/.test(req.url)) {
         if (encryption === 'none' && compression === 'none') {
             download(req, res);
-        } else if (encryption === ('aes' || 'rsa') && compression === 'none') {
+        } else if (encryption === 'aes' && compression === 'none') {
             downloadDecrypt(req, res);
         } else if (encryption === 'none' && compression === 'compress') {
             downloadCompress(req, res);
@@ -43,7 +43,7 @@ function requestHandler(req, res) {
     } else if ( /\/upload\/[^\/]+$/.test(req.url) ) {
         if (encryption === 'none' && compression === 'none') {
             upload(req, res);
-        } else if (encryption === ('aes' || 'rsa') && compression === 'none') {
+        } else if (encryption === 'aes' && compression === 'none') {
             uploadEncrypt(req, res);
         } else if (encryption === 'none' && compression === 'compress') {
             uploadCompress(req, res);
@@ -131,7 +131,7 @@ function sendInvalidRequest(res){
 /* SYMMETRIC ENCRYPTION/DECRYPTION */
 // using: https://gist.github.com/chris-rock/335f92742b497256982a
 
-// Choosing encryption scheme, setting key & IV
+// Choosing encryption scheme, setting password
 let algorithm = 'aes-256-cbc';
 let password = 'd6F3Efeq';
 
@@ -150,9 +150,7 @@ function downloadDecrypt(req, res) {
         res.end();
       }
     })  
-  } else if (encryption === 'rsa') {
-    
-  }
+  } 
 }
 
 function decrypt(buffer){
@@ -178,10 +176,6 @@ function uploadEncrypt(req, res) {
       res.write('uploaded succesfully');
       res.end();
     })  
-  } else if (encryption === 'rsa') {
-    // let fileName = path.basename(req.url);
-    // let filePath = path.join(__dirname, 'files', fileName);
-
   }
 }
 
