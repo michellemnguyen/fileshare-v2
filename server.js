@@ -2,8 +2,8 @@ const http = require('http');
 const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
+const NodeRSA = require('node-rsa');
 var zlib = require('zlib');
-var toArray = require('stream-to-array');
 
 let port = process.argv[2] || 3000;
 
@@ -32,7 +32,7 @@ function requestHandler(req, res) {
     } else if ( /\/files\/[^\/]+$/.test(req.url)) {
         if (encryption === 'none' && compression === 'none') {
             download(req, res);
-        } else if (encryption === 'aes' && compression === 'none') {
+        } else if (encryption === ('aes' || 'rsa') && compression === 'none') {
             downloadDecrypt(req, res);
         } else if (encryption === 'none' && compression === 'compress') {
             downloadCompress(req, res);
@@ -43,7 +43,7 @@ function requestHandler(req, res) {
     } else if ( /\/upload\/[^\/]+$/.test(req.url) ) {
         if (encryption === 'none' && compression === 'none') {
             upload(req, res);
-        } else if (encryption === 'aes' && compression === 'none') {
+        } else if (encryption === ('aes' || 'rsa') && compression === 'none') {
             uploadEncrypt(req, res);
         } else if (encryption === 'none' && compression === 'compress') {
             uploadCompress(req, res);
@@ -90,8 +90,8 @@ function sendListOfUploadedFiles(res){
 }
 
 
-function download(url, res){
-  let file = path.join(__dirname, url);
+function download(req, res){
+  let file = path.join(__dirname, req.url);
   fs.readFile(file, (err, content) => {
     if (err) {
       res.writeHead(404, {'Content-Type': 'text'});
@@ -128,26 +128,31 @@ function sendInvalidRequest(res){
   res.end(); 
 }
 
-/* ENCRYPTION/DECRYPTION */
+/* SYMMETRIC ENCRYPTION/DECRYPTION */
 // using: https://gist.github.com/chris-rock/335f92742b497256982a
 
-// Nodejs encryption with CTR
+// Choosing encryption scheme, setting key & IV
 let algorithm = 'aes-256-cbc';
 let password = 'd6F3Efeq';
 
 function downloadDecrypt(req, res) {
   let file = path.join(__dirname, req.url);
-  fs.readFile(file, (err, content) => {
-    if (err) {
-      res.writeHead(404, {'Content-Type': 'text'});
-      res.write('File Not Found!');
-      res.end();
-    } else {
-      res.writeHead(200, {'Content-Type': 'application/octet-stream'});
-      res.write(decrypt(content));
-      res.end();
-    }
-  })
+
+  if (encryption === 'aes') {
+    fs.readFile(file, (err, content) => {
+      if (err) {
+        res.writeHead(404, {'Content-Type': 'text'});
+        res.write('File Not Found!');
+        res.end();
+      } else {
+        res.writeHead(200, {'Content-Type': 'application/octet-stream'});
+        res.write(decrypt(content));
+        res.end();
+      }
+    })  
+  } else if (encryption === 'rsa') {
+    
+  }
 }
 
 function decrypt(buffer){
@@ -156,23 +161,28 @@ function decrypt(buffer){
     return dec;
 }  
 
-function uploadEncrypt(req, res){
-  console.log('saving encrypted uploaded file');
+function uploadEncrypt(req, res) {
+  console.log('uploading encrypted file');
+  if (encryption === 'aes') {
+    let fileName = path.basename(req.url);
+    let filePath = path.join(__dirname, 'files', fileName);
+    
+    // encrypt content
+    var encrypt = crypto.createCipher(algorithm, password);
+    // create output file in correct location
+    var output = fs.createWriteStream(filePath);
 
-  let fileName = path.basename(req.url);
-  let filePath = path.join(__dirname, 'files', fileName);
+    req.pipe(encrypt).pipe(output);
+    req.on('end', () => {
+      res.writeHead(200, {'Content-Type': 'text'});
+      res.write('uploaded succesfully');
+      res.end();
+    })  
+  } else if (encryption === 'rsa') {
+    // let fileName = path.basename(req.url);
+    // let filePath = path.join(__dirname, 'files', fileName);
 
-  // encrypt content
-  var encrypt = crypto.createCipher(algorithm, password);
-  // create output file
-  var output = fs.createWriteStream(filePath);
-
-  req.pipe(encrypt).pipe(output);
-  req.on('end', () => {
-    res.writeHead(200, {'Content-Type': 'text'});
-    res.write('uploaded succesfully');
-    res.end();
-  })
+  }
 }
 
 /* COMPRESSION/DECOMPRESSION */

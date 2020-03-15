@@ -5,6 +5,7 @@
   "main": "server.js",
   "dependencies": {
     "crypto": "^1.0.1",
+    "node-rsa": "^1.0.7",
     "stream-to": "^2.0.0",
     "stream-to-array": "^2.3.0",
     "zlib": "^1.0.5"
